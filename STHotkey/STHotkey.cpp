@@ -3,6 +3,19 @@
 
 
 HHOOK g_hHook = NULL;
+bool persistentMode = true;
+
+void sendWideChar(wchar_t ch) {
+	INPUT in[2] = {};
+	in[0].type = INPUT_KEYBOARD;
+	in[0].ki.dwFlags = KEYEVENTF_UNICODE;
+	in[0].ki.wScan = ch;
+
+	in[1] = in[0];
+	in[1].ki.dwFlags = KEYEVENTF_UNICODE | KEYEVENTF_KEYUP;
+
+	SendInput(2, in, sizeof(INPUT));
+}
 
 LRESULT CALLBACK LLKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 {
