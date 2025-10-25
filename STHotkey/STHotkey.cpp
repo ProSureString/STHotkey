@@ -1,24 +1,25 @@
 #include <windows.h>
 #include <iostream>
 
-using namespace std;
+
+HHOOK g_hHook = NULL;
 
 int main()
 {
 	if (!RegisterHotKey(NULL, 1, MOD_CONTROL | MOD_ALT, 0x53)) // S is 0x53 i thnk
 	{
-		cerr << "Failed to register hotkey. error code: " << GetLastError() << endl;
+		std::cerr << "Failed to register hotkey. error code: " << GetLastError() << std::endl;
 		return 1;
 	}
 
-	cout << "Hotkey reg success, ctrl alt s to trigger. listening,.. " << endl;
+	std::cout << "Hotkey reg success, ctrl alt s to trigger. listening,.. " << std::endl;
 
 	MSG msg = { 0 };
 	while (GetMessage(&msg, NULL, 0, 0) != 0)
 	{
 		if (msg.message == WM_HOTKEY)
 		{
-			cout << "triggerded hotkey1 !!" << endl;
+			std::cout << "triggerded hotkey1 !!" << std::endl;
 		}
 	}
 
