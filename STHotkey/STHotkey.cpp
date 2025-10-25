@@ -17,6 +17,16 @@ void sendWideChar(wchar_t ch) {
 	SendInput(2, in, sizeof(INPUT));
 }
 
+int vkToUnicode(UINT vk, UINT scan, bool isKeyDown, wchar_t* outBuf, int bufSize) {
+	BYTE keyState[256];
+	if (!GetKeyboardState(keyState)) {
+		return 0;
+	}
+
+	HKL layout = GetKeyboardLayout(0);
+	return ToUnicodeEx(vk, scan, keyState, outBuf, bufSize, 0, layout);
+}
+
 LRESULT CALLBACK LLKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 {
 	if (nCode >= 0) {
