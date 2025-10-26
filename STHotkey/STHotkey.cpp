@@ -1,9 +1,13 @@
 #include <windows.h>
 #include <iostream>
+#include <vector>
+#include <string>
 
 
 HHOOK g_hHook = NULL;
 bool persistentMode = true;
+const wchar_t combinging_long_stroke = 0x0336;
+
 
 void sendWideChar(wchar_t ch) {
 	INPUT in[2] = {};
