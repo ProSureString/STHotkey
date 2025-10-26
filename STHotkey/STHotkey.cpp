@@ -31,10 +31,28 @@ int vkToUnicode(UINT vk, UINT scan, bool isKeyDown, wchar_t* outBuf, int bufSize
 	return ToUnicodeEx(vk, scan, keyState, outBuf, bufSize, 0, layout);
 }
 
+bool isTransformable(wchar_t ch)
+{
+	if (ch >= 0x20 && ch <= 0x7E) {
+		return true;
+	}
+
+	if (iswprint(ch)) {
+		return true;
+	}
+
+
+}
+
 LRESULT CALLBACK LLKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 {
 	if (nCode >= 0) {
 		KBDLLHOOKSTRUCT* kb = (KBDLLHOOKSTRUCT*)lParam;
+
+		bool rCtrlDown = (GetAsyncKeyState(VK_RCONTROL) & 0x8000) != 0;
+		bool activeMode = persistentMode || rCtrlDown;
+
+
 		if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) {
 			if (kb->vkCode == 'S') {
 				if ((GetAsyncKeyState(VK_CONTROL) & 0x8000) && (GetAsyncKeyState(VK_MENU) & 0x8000)) {
@@ -45,7 +63,7 @@ LRESULT CALLBACK LLKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 				}
 			}
 
-
+			/*
 			//test | eats and spit out same char a-z
 			wchar_t out[4] = {0};
 			int ret = vkToUnicode(kb->vkCode, kb->scanCode, true, out, 4);
@@ -55,7 +73,31 @@ LRESULT CALLBACK LLKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 			}
 
 			std::cout << "VK: " << kb->vkCode << " sc: " << kb->scanCode << std::endl;
+			*/
+		}
 
+		if ((wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) && activeMode) {
+			if (kb->vkCode == VK_SHIFT || kb->vkCode == VK_LSHIFT || kb->vkCode == VK_RSHIFT ||
+				kb->vkCode == VK_CONTROL || kb->vkCode == VK_LCONTROL || kb->vkCode == VK_RCONTROL ||
+				kb->vkCode == VK_MENU || kb->vkCode == VK_LMENU || kb->vkCode == VK_RMENU ||
+				kb->vkCode == VK_LWIN || kb->vkCode == VK_RWIN) {
+				return CallNextHookEx(g_hHook, nCode, wParam, lParam);
+			}
+
+			switch (kb->vkCode) {
+			case VK_BACK: case VK_RETURN: case VK_TAB:
+			case VK_LEFT: case VK_RIGHT: case VK_UP: case VK_DOWN:
+			case VK_ESCAPE: case VK_DELETE:
+				return CallNextHookEx(g_hHook, nCode, wParam, lParam);
+			}
+
+			wchar_t buf[8] = { 0 };
+			int got = vkToUnicode(kb->vkCode, kb->scanCode, true, buf, 8);
+			if (got > 0 && isTransformable(buf[0])) {
+				sendWideChar(buf[0]);
+				sendWideChar(combinging_long_stroke);
+				return 1;
+			}
 		}
 	}
 
@@ -71,7 +113,10 @@ int main()
 		return 1;
 	}
 
-	std::cout << "hook installed, press stuff to see vk codes,.. " << std::endl;
+	std::cout << "Strikethrough live kb addon thing running... " << std::endl;
+	std::cout << "hold Right-Ctrl to apply strikethrough...... " << std::endl;
+	std::cout << "or press Ctrl+Alt+S to toggle persistent.... " << std::endl;
+	std::cout << "Closing should exit this.................... " << std::endl;
 
 	MSG msg;
 	while (GetMessage(&msg, NULL, 0, 0))
