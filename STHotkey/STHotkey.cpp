@@ -32,9 +32,29 @@ LRESULT CALLBACK LLKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 	if (nCode >= 0) {
 		KBDLLHOOKSTRUCT* kb = (KBDLLHOOKSTRUCT*)lParam;
 		if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) {
+			if (kb->vkCode == 'S') {
+				if ((GetAsyncKeyState(VK_CONTROL) & 0x8000) && (GetAsyncKeyState(VK_MENU) & 0x8000)) {
+					persistentMode = !persistentMode;
+					std::cout << "Persistent mode: " << (persistentMode ? "ON" : "OFF") << std::endl;
+				
+					return 1;
+				}
+			}
+
+
+			//test | eats and spit out same char a-z
+			wchar_t out[4] = {0};
+			int ret = vkToUnicode(kb->vkCode, kb->scanCode, true, out, 4);
+			if (ret > 0 && iswprint(out[0])) {
+				sendWideChar(out[0]);
+				return 1;
+			}
+
 			std::cout << "VK: " << kb->vkCode << " sc: " << kb->scanCode << std::endl;
+
 		}
 	}
+
 	return CallNextHookEx(g_hHook, nCode, wParam, lParam);
 }
 
